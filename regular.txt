@@ -1,0 +1,67 @@
+import re
+import csv
+
+def read_file(file):
+  with open(file) as f:
+    rows = csv.reader(f, delimiter=",")
+    contacts_list = list(rows)
+    return contacts_list
+
+def edit_file(file):
+  pattern_phone = r"(\+7|8)?\s*\(?(\d{3})\)?[-\s]?(\d{3})?[-\s]?((\d{2}))[-\s]?(\d{2})[-\s]?\(?([а-я]{3})?\.?\s*(\d{4})?\)?"
+  testlist = []
+  modifed_list = read_file(file)
+  for info in modifed_list[1:]:
+    info.insert(3, " ".join(info[0:3]))
+    result = re.sub(pattern_phone, r"+7(\2)\3-\4-\6 \7 \8", info[6])
+    del info[0:3]
+    del info[3]
+    info.insert(3, result)
+    split_names = info[0].split(" ")
+    split_names.extend(info)
+    split_names[:5] = [x for x in split_names[:5] if x != '']
+    del split_names[3]
+    testlist.append(split_names)
+  testlist[7][2] = ''
+  testlist[7].insert(5, '')
+  del modifed_list[1:]
+  modifed_list.extend(testlist)
+  testlist.clear()
+  return modifed_list
+
+
+def double_delite(file):
+  unique_dict = dict()
+  modifed_list = edit_file(file)
+  headers = modifed_list[0]
+  for info_list in modifed_list[1:]:
+    if info_list[0] in unique_dict:
+      unique_dict[info_list[0]].extend(info_list[1:])
+    else:
+        unique_dict[info_list[0]] = info_list[1:]
+
+  for key, value in unique_dict.items():
+    if len(value) > 7:
+      if value[0] == '':
+        value[0] = value[6]
+      if value[1] == '':
+        value[1] = value[7]
+      if value[2] == '':
+        value[2] = value[8]
+      if value[3] == '':
+        value[3] = value[9]
+      if value[4] == '':
+        value[4] = value[10]
+      if value[5] == '':
+        value[5] = value[11]
+
+    del value[6:]
+
+  double_delete_list = []
+  for key , value in unique_dict.items():
+    value.insert(0, key)
+    double_delete_list.append(value)
+  double_delete_list.insert(0, headers)
+
+  print(double_delete_list)
+double_delite("phonebook_raw.csv")
